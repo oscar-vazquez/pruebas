@@ -18,7 +18,7 @@ SELECT nro_servicio,
 Por cada orden encontrada en la consulta anterior, buscar cortes previos para el cliente.
 Seleccionamos el último, el estado del mismo y su resultado.
 
-~~~
+~~~ SQL
 SELECT FIRST 1 
        a.nro_servicio,
        a.fecha_solicitud,
