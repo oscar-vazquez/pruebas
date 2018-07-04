@@ -5,7 +5,7 @@ en SOLDIME antes de comenzar a trabajar con eOrder.
 
 Buscar todas las ordenes de **rehabilitación** que aún no fueron exportadas a eOrder.
 
-~~~
+~~~ sql
 SELECT nro_servicio,
        fecha_solicitud,
        numero_cliente
