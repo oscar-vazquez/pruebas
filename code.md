@@ -1,6 +1,6 @@
 Prueba highlight
 
-``` postgres-sql
+``` sql
 CREATE TABLE conversion_motivos(
     motivo_origen
     submotivo_destino
