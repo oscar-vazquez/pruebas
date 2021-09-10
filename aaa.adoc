@@ -1,0 +1,213 @@
+= Stored Procedures
+:description: SP invocados desde la aplicación
+:toc:
+
+:icons: font
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+== SP Principales
+
+Los _stored procedures_ que se llaman desde la aplicación son los siguientes
+
+[%autowidth.stretch]
+[frame=none]
+[grid=rows]
+|===
+|SP |Descripción
+
+|<<_get_rutalectura,get_rutalectura>> |Calcula una ruta de lectura en base a los datos de dirección
+|<<_sfc_retcli,sfc_retcli>> |Crea un retiro de medidor (retcli) o agrega un a OT a uno existente
+|<<_sfc_anulacnt,sfc_anulacnt>> |Cancela un proceso de contratación
+|<<_sfc_contrata_alta_ct,sfc_contrata_alta_ct>> |Cambio de titularidad
+|<<_sfc_manser,sfc_manser>> |Cambio de condiciones contratuales con OT (mantenimiento de servicio)
+|===
+
+[#_get_rutalectura]
+=== get_rutalectura
+
+Calcula una ruta de lectura en base a los datos de dirección
+
+==== Parámetros
+. Provincia
+. Sucursal
+. Partido
+. Localidad
+. Código Calle
+. Altura
+
+Busca en cliente para los parámetros que recibe el mayor correlativo y le suma 2.
+
+WARNING: La altura debe ser numérica, cancela si recibe otra cosa que no sea un número.
+
+
+La dirección tiene que estar nomeclada.
+
+==== Retorno
+
+. Plan (sector)
+. Radio (zona)
+. Correlativo Ruta
+
+[#_sfc_retcli]
+=== sfc_retcli
+
+Crea una orden de retiro de medidor, o si la orden ya existe agrega una nueva ot a la misma
+
+==== Parámetros
+
+. Código de motivo
+. Número cliente
+. Número mensaje XNear
+. Número orden (retcli)
+. Observaciones
+
+Para la creación de un nuevo *retcli* se tiene que obtener un número de mensaje
+y un número de orden y pasarlos como parámetros.
+
+Para crear una nueva OT para un *retcli* existente se le pasa un número de mensaje
+y número de orden existente.
+
+==== Retorno
+
+. Código
+. Descripción
+. Número OT
+
+Si el proceso termina correctamente devuelve en código el valor 0 y el número de OT creada.
+
+En caso de error devuelve un código con valor distinto de 0 y una descripción del error.
+
+==== SP invocados
+
+* sfc_data_climed
+* sfc_orden
+* sfc_gen_ot
+* sfc_envia_mensaje
+* xnpro_enviar
+
+[#_sfc_anulacnt]
+=== sfc_anulacnt
+
+Cancela un proceso de contratación
+
+==== Parámetros
+
+. Procedimiento
+. Número mensaje XNear
+. Número de solicitud (solo para nuevos suministros)
+
+Los valores válidos para *procedimiento* son
+
+* RETCLI
+* MANSER
+* INCOR Incorporación, nuevo suministro
+
+==== Retorno
+
+. Código
+. Descripción
+
+Si el proceso termina correctamente devuelve en código el valor 0.
+
+En caso de error devuelve un código con valor distinto de 0 y una descripción del error.
+
+==== SP invocados
+
+* xpro_finalizar
+* xpro_depurar
+
+[#_sfc_contrata_alta_ct]
+=== sfc_contrata_alta_ct
+
+==== Parámetros
+
+. Número de cliente nuevo
+. Número de cliente viejo
+. Número de solicitud
+. Número mensaje XNear
+
+==== Retorno
+
+. Código
+. Descripción
+
+Si el proceso termina correctamente devuelve en código el valor 0.
+
+En caso de error devuelve un código con valor distinto de 0 y una descripción del error.
+
+==== SP invocados
+
+* sfc_verif_clteviejo
+* sfc_mover_clientes
+* sfc_graba_modif
+* sfc_get_dvcliente
+* sfc_mover_medidor
+* sfc_mover_precintos
+* sfc_graba_modif
+* sfc_sam_medidores
+* sfc_orden_camtit
+
+[#_sfc_manser]
+=== sfc_manser
+
+==== Parámetros
+
+. Código motivo
+. Número de cliente
+. Clave montri, tipo de medidor, monofásico o trifásico
+. Número mensaje XNear
+. Número de orden (manser)
+. Observaciones
+
+==== Retorno
+
+. Código
+. Descripción
+. Número de OT
+
+Si el proceso termina correctamente devuelve en código el valor 0.
+
+En caso de error devuelve un código con valor distinto de 0 y una descripción del error.
+
+==== SP invocados
+
+* sfc_tabmotivos
+* sfc_data_climed
+* sfc_orden
+* sfc_gen_ot
+* sfc_envia_mensaje
+* xpro_enviar
+
+== SP auxiliares
+
+[.underliine]Lista de SP auxiliares, no se llaman directamente, son invocados por alguno de la lista de SP principales
+
+[%autowidth.stretch]
+[frame=none]
+[grid=rows]
+|===
+|SP |Descripción 
+
+|*sfc_dataclimed* |Obtiene los datos del cliente y los guarda en una tabla para pasar datos en los sp
+|*sfc_enviamensaje* |Envia en mensaje XNear, para eso llama a xnpro_enviar
+|*sfc_genot* |Crea una OT
+|*sfc_get_dvcliente* |Calcula el dígito verificador para el número de cliente
+|*sfc_graba_modif* |Insert en la tabla modif la información del cambio realizado
+|*sfc_mover_clientes* |Copia los datos del cliente viejo al nuevo y da de baja el viejo
+|*sfc_mover_medidor* |Cambia el medidor del cliente viejo al nuevo
+|*sfc_mover_precintos* |Cambia los precintos del cliente viejo al nuevo
+|*sfc_orden* |Inserta en la tabla orden un retcli o manser
+|*sfc_orden_camtit* |Inserta una orden por cambio de titularidad
+|*sfc_sam_medidores* |Actualiza el estado del medidor y registra el movimiento del mismo
+|*sfc_tabmotivos* |Verifica que el motivo sea válido
+|*sfc_verif_clteviejo* |Verifica que un cliente se encuentre en estado para realizar un cambio de titularidad
+|*xpro_depurar* |Depura mensaje finalizado
+|*xpro_finalizar* |Finalizar un mensaje
+|*xpro_enviar* |Envia un mensaje XNear
+|===
